@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func (d *Database) SavePoints(location models.Location, points []models.Point) error {
+func (d *Database) SavePoints(location *models.Location, points []models.Point) error {
 	if len(points) == 0 {
 		return nil
 	}

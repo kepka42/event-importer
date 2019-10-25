@@ -3,14 +3,26 @@ package main
 import (
 	"event-importer/core"
 	"event-importer/core/importers"
+	"flag"
 	"fmt"
 )
 
+type Params struct {
+	VKtoken      string
+	DBconnection string
+	LocationID   int
+	CityID       int
+}
+
 func main() {
-	imps := initImporters()
+	params := parseParams()
+	imps := initImporters(&params)
 
 	manager := &core.Manager{}
-	err := manager.Init(imps, "")
+	err := manager.Init(imps, params.DBconnection, core.Query{
+		LocationID: params.LocationID,
+		CityID:     params.CityID,
+	})
 
 	if err != nil {
 		fmt.Println(err)
@@ -22,15 +34,33 @@ func main() {
 	}
 }
 
-func initImporters() []core.Importer {
+func initImporters(params *Params) []core.Importer {
 	imps := make([]core.Importer, 0)
 
 	vk := &importers.VK{}
-	vk.Init("")
+	err := vk.Init(params.VKtoken)
+	if err != nil {
+		panic(err)
+	}
 
 	imps = append(imps, vk)
 
 	return imps
 }
 
+func parseParams() Params {
+	vk := flag.String("vk", "", "token for vk")
+	db := flag.String("db", "", "connection for db")
+	loc := flag.Int("location", 0, "location id")
+	city := flag.Int("city", 0, "city id")
 
+	flag.Parse()
+
+	params := Params{}
+	params.VKtoken = *vk
+	params.DBconnection = *db
+	params.LocationID = *loc
+	params.CityID = *city
+
+	return params
+}
