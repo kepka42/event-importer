@@ -1,6 +1,8 @@
 package core
 
-import "event-importer/models"
+import (
+	"event-importer/models"
+)
 
 type Importer interface {
 	Init(token string) error

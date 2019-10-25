@@ -1,9 +1,8 @@
 package database
 
-
 import (
-	_ "github.com/go-sql-driver/mysql"
 	"database/sql"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 type Database struct {
@@ -11,7 +10,7 @@ type Database struct {
 }
 
 func (d *Database) Init(conn string) error {
-	db, err := sql.Open("mysql", conn)
+	db, err := sql.Open("mysql", conn+"?parseTime=true")
 
 	if err != nil {
 		return err

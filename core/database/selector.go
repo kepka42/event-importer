@@ -4,10 +4,11 @@ import (
 	"database/sql"
 	"event-importer/models"
 	"strings"
+	"time"
 )
 
 func (d *Database) GetLocationById(ID int) (*models.Location, error) {
-	rows, err := d.db.Query("select id, city_id, latitude, longitude, radius from locations where id = ?", ID)
+	rows, err := d.db.Query("select id, city_id, latitude, longitude, radius, start_from from locations where id = ?", ID)
 	if err != nil {
 		return nil, err
 	}
@@ -15,10 +16,15 @@ func (d *Database) GetLocationById(ID int) (*models.Location, error) {
 
 	rows.Next()
 	loc := new(models.Location)
-	err = rows.Scan(&loc.ID, &loc.CityID, &loc.Lat, &loc.Long, &loc.Radius)
+
+	var t time.Time
+	err = rows.Scan(&loc.ID, &loc.CityID, &loc.Lat, &loc.Long, &loc.Radius, &t)
 	if err != nil {
 		return nil, err
 	}
+
+	loc.StartFrom.Int64 = t.Unix()
+	loc.StartFrom.Valid = true
 
 	cities, err := d.getSocialCities([]int{loc.CityID})
 
@@ -34,7 +40,7 @@ func (d *Database) GetLocationById(ID int) (*models.Location, error) {
 }
 
 func (d *Database) GetLocationsByCityID(cityID int) ([]*models.Location, error) {
-	rows, err := d.db.Query("select id, city_id, latitude, longitude, radius from locations where city_id = ?", cityID)
+	rows, err := d.db.Query("select id, city_id, latitude, longitude, radius, start_from from locations where city_id = ?", cityID)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +55,7 @@ func (d *Database) GetLocationsByCityID(cityID int) ([]*models.Location, error) 
 }
 
 func (d *Database) GetLocations() ([]*models.Location, error) {
-	rows, err := d.db.Query("select id, city_id, latitude, longitude, radius from locations")
+	rows, err := d.db.Query("select id, city_id, latitude, longitude, radius, start_from from locations")
 	if err != nil {
 		return nil, err
 	}
@@ -100,10 +106,15 @@ func (d *Database) formatLocations(rows *sql.Rows, cities []*models.CitySocial) 
 	locations := make([]*models.Location, 0)
 	for rows.Next() {
 		loc := new(models.Location)
-		err := rows.Scan(&loc.ID, &loc.CityID, &loc.Lat, &loc.Long, &loc.Radius)
+
+		var t time.Time
+		err := rows.Scan(&loc.ID, &loc.CityID, &loc.Lat, &loc.Long, &loc.Radius, &t)
 		if err != nil {
 			return nil, err
 		}
+
+		loc.StartFrom.Int64 = t.Unix()
+		loc.StartFrom.Valid = true
 		locations = append(locations, loc)
 
 		for _, city := range cities {

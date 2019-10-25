@@ -3,6 +3,7 @@ package core
 import (
 	"event-importer/core/database"
 	"event-importer/models"
+	"time"
 )
 
 type Query struct {
@@ -30,9 +31,8 @@ func (m *Manager) Init(importers []Importer, dbConn string, query Query) error {
 }
 
 func (m *Manager) Run() error {
-	locations := make([]*models.Location, 0)
 	var err error
-
+	locations := make([]*models.Location, 0)
 	if m.query.CityID != 0 {
 		locations, err = m.db.GetLocationsByCityID(m.query.CityID)
 		if err != nil {
@@ -52,6 +52,7 @@ func (m *Manager) Run() error {
 		}
 	}
 
+	ids := make([]int, 0)
 	for _, location := range locations {
 		pins := make([]models.Point, 0)
 		for _, imp := range m.importers {
@@ -68,6 +69,14 @@ func (m *Manager) Run() error {
 		if err != nil {
 			return err
 		}
+
+		ids = append(ids, location.ID)
+	}
+
+	now := time.Now()
+	err = m.db.UpdateStartFrom(ids, &now)
+	if err != nil {
+		return err
 	}
 
 	return nil

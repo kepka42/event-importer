@@ -3,6 +3,8 @@ package database
 import (
 	"event-importer/models"
 	"fmt"
+	"strings"
+	"time"
 )
 
 func (d *Database) SavePoints(location *models.Location, points []models.Point) error {
@@ -40,5 +42,20 @@ func (d *Database) SavePoints(location *models.Location, points []models.Point) 
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (d *Database) UpdateStartFrom(locIds []int, t *time.Time) error {
+	args := make([]interface{}, len(locIds)+1)
+	args[0] = t
+	for i, id := range locIds {
+		args[i+1] = id
+	}
+
+	_, err := d.db.Exec(`UPDATE locations SET start_from = ? where id in (?`+strings.Repeat(`,?`, len(args)-2)+`)`, args...)
+	if err != nil {
+		return nil
+	}
+
 	return nil
 }

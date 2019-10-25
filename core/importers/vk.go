@@ -70,9 +70,17 @@ func (v *VK) Download(location *models.Location) ([]models.Point, error) {
 	points := make([]models.Point, 0)
 	offset := 0
 
+	var startFrom *time.Time
+	if location.StartFrom.Valid {
+		start := time.Unix(location.StartFrom.Int64, 0)
+		startFrom = &start
+	} else {
+		startFrom = nil
+	}
+
 	client := &http.Client{}
 	for {
-		photos, err := v.getPhotos(location.Lat, location.Long, location.Radius, offset, client)
+		photos, err := v.getPhotos(location.Lat, location.Long, location.Radius, offset, startFrom, client)
 
 		if err != nil {
 			return nil, err
@@ -100,7 +108,7 @@ func (v *VK) Type() string {
 	return "vk"
 }
 
-func (v *VK) getPhotos(lat float64, long float64, radius int, offset int, client *http.Client) (map[int][]Item, error) {
+func (v *VK) getPhotos(lat float64, long float64, radius int, offset int, startFrom *time.Time, client *http.Client) (map[int][]Item, error) {
 	req, err := http.NewRequest("GET", v.url+"photos.search", nil)
 
 	if err != nil {
@@ -115,6 +123,9 @@ func (v *VK) getPhotos(lat float64, long float64, radius int, offset int, client
 	query.Add("v", "5.102")
 	query.Add("count", "1000")
 	query.Add("offset", strconv.Itoa(offset))
+	if startFrom != nil {
+		query.Add("start_time", strconv.FormatInt(startFrom.Unix(), 10))
+	}
 	req.URL.RawQuery = query.Encode()
 
 	res, err := client.Do(req)

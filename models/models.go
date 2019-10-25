@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"database/sql"
+	"time"
+)
 
 type Point struct {
 	ID          int
@@ -25,6 +28,7 @@ type Location struct {
 	Long        float64
 	Radius      int
 	CitySocials []*CitySocial
+	StartFrom   sql.NullInt64
 }
 
 type CitySocial struct {
