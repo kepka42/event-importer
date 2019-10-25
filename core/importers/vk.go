@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"regexp"
 	"strconv"
 	"time"
 )
@@ -199,13 +200,8 @@ func (v *VK) mapToPoint(items map[int][]Item, users map[int]User) []models.Point
 			}
 
 			if user.Bdate != "" {
-				t, err := dateToUnix(user.Bdate)
+				temp, err := makeAge(user.Bdate)
 				if err == nil {
-					current := time.Now().Unix()
-					diff := current - t
-					tm := time.Unix(diff, 0)
-
-					temp := tm.Year()
 					age = &temp
 				}
 			}
@@ -231,13 +227,24 @@ func (v *VK) mapToPoint(items map[int][]Item, users map[int]User) []models.Point
 	return pins
 }
 
-func dateToUnix(date string) (int64, error) {
-	layout := "21.9.1986"
-	t, err := time.Parse(layout, date)
+func makeAge(date string) (int, error) {
+	re := regexp.MustCompile(`(?m)^([0-9]{1,2})\.([0-9]{1,2})\.([0-9]{4})$`)
+	strs := re.FindStringSubmatch(date)
 
-	if err != nil {
-		return 0, err
+	if len(strs) != 4 {
+		return 0, nil
 	}
 
-	return t.Unix(), nil
+	days, _ := strconv.Atoi(strs[1])
+	months, _ := strconv.Atoi(strs[2])
+	years, _ := strconv.Atoi(strs[3])
+
+	current := time.Now()
+
+	age := current.Year() - years
+	if (int(current.Month()) < months) || (int(current.Month()) == months && current.Day() < days) {
+		age -= 1
+	}
+
+	return age, nil
 }
