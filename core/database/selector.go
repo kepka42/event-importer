@@ -17,14 +17,19 @@ func (d *Database) GetLocationById(ID int) (*models.Location, error) {
 	rows.Next()
 	loc := new(models.Location)
 
-	var t time.Time
+	var t *time.Time
 	err = rows.Scan(&loc.ID, &loc.CityID, &loc.Lat, &loc.Long, &loc.Radius, &t)
 	if err != nil {
 		return nil, err
 	}
 
-	loc.StartFrom.Int64 = t.Unix()
-	loc.StartFrom.Valid = true
+	if t == nil {
+		loc.StartFrom.Int64 = 0
+		loc.StartFrom.Valid = false
+	} else {
+		loc.StartFrom.Int64 = t.Unix()
+		loc.StartFrom.Valid = true
+	}
 
 	cities, err := d.getSocialCities([]int{loc.CityID})
 
@@ -107,14 +112,19 @@ func (d *Database) formatLocations(rows *sql.Rows, cities []*models.CitySocial) 
 	for rows.Next() {
 		loc := new(models.Location)
 
-		var t time.Time
+		var t *time.Time
 		err := rows.Scan(&loc.ID, &loc.CityID, &loc.Lat, &loc.Long, &loc.Radius, &t)
 		if err != nil {
 			return nil, err
 		}
 
-		loc.StartFrom.Int64 = t.Unix()
-		loc.StartFrom.Valid = true
+		if t == nil {
+			loc.StartFrom.Int64 = 0
+			loc.StartFrom.Valid = false
+		} else {
+			loc.StartFrom.Int64 = t.Unix()
+			loc.StartFrom.Valid = true
+		}
 		locations = append(locations, loc)
 
 		for _, city := range cities {
