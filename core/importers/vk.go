@@ -88,7 +88,7 @@ func (v *VK) Type() string {
 	return "vk"
 }
 
-func (v *VK) getPhotos(lat float64, long float64, radius int, offset int, client *http.Client) (map[int]Item, error) {
+func (v *VK) getPhotos(lat float64, long float64, radius int, offset int, client *http.Client) (map[int][]Item, error) {
 	req, err := http.NewRequest("GET", v.url+"photos.search", nil)
 
 	if err != nil {
@@ -122,9 +122,14 @@ func (v *VK) getPhotos(lat float64, long float64, radius int, offset int, client
 		return nil, err
 	}
 
-	photos := make(map[int]Item)
+	photos := make(map[int][]Item)
 	for _, val := range p.Response.Items {
-		photos[val.OwnerID] = val
+		if obj, ok := photos[val.OwnerID]; ok {
+			photos[val.OwnerID] = append(obj, val)
+		} else {
+			photos[val.OwnerID] = make([]Item, 0)
+			photos[val.OwnerID] = append(obj, val)
+		}
 	}
 
 	return photos, nil
@@ -178,7 +183,7 @@ func (v *VK) getUsers(ids []int, client *http.Client) (map[int]User, error) {
 	return users, nil
 }
 
-func (v *VK) mapToPoint(items map[int]Item, users map[int]User) []models.Point {
+func (v *VK) mapToPoint(items map[int][]Item, users map[int]User) []models.Point {
 	pins := make([]models.Point, 0)
 
 	for k, item := range items {
@@ -206,19 +211,21 @@ func (v *VK) mapToPoint(items map[int]Item, users map[int]User) []models.Point {
 			}
 		}
 
-		pin := models.Point{
-			ID:         item.ID,
-			Text:       item.Text,
-			Lat:        item.Lat,
-			Long:       item.Long,
-			SocialType: v.Type(),
-			Gender:     gender,
-			Age:        age,
-			URL:        item.Sizes[len(item.Sizes)-1].URL,
-			UserID:     item.OwnerID,
-		}
+		for _, val := range item {
+			pin := models.Point{
+				ID:         val.ID,
+				Text:       val.Text,
+				Lat:        val.Lat,
+				Long:       val.Long,
+				SocialType: v.Type(),
+				Gender:     gender,
+				Age:        age,
+				URL:        val.Sizes[len(val.Sizes)-1].URL,
+				UserID:     val.OwnerID,
+			}
 
-		pins = append(pins, pin)
+			pins = append(pins, pin)
+		}
 	}
 
 	return pins
