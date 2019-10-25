@@ -44,9 +44,14 @@ type RootUsersResponse struct {
 }
 
 type User struct {
-	ID    int    `json:"id"`
-	Sex   int    `json:"sex"`
-	Bdate string `json:"bdate"`
+	ID        int        `json:"id"`
+	Sex       int        `json:"sex"`
+	Bdate     string     `json:"bdate"`
+	Relatives []Relative `json:"relatives"`
+}
+
+type Relative struct {
+	Type string `json:"type"`
 }
 
 func (v *VK) Init(token string) error {
@@ -155,7 +160,7 @@ func (v *VK) getUsers(ids []int, client *http.Client) (map[int]User, error) {
 	query := req.URL.Query()
 	query.Add("access_token", v.token)
 	query.Add("user_ids", strIds)
-	query.Add("fields", "bdate,sex,city")
+	query.Add("fields", "bdate,sex,city,relatives")
 	query.Add("v", "5.102")
 	req.URL.RawQuery = query.Encode()
 
@@ -190,6 +195,7 @@ func (v *VK) mapToPoint(items map[int][]Item, users map[int]User) []models.Point
 	for k, item := range items {
 		gender := new(string)
 		age := new(int)
+		hasChilds := false
 		if user, ok := users[k]; ok {
 			if user.Sex == 1 {
 				t := "female"
@@ -200,24 +206,39 @@ func (v *VK) mapToPoint(items map[int][]Item, users map[int]User) []models.Point
 			}
 
 			if user.Bdate != "" {
-				temp, err := makeAge(user.Bdate)
-				if err == nil {
-					age = &temp
+				temp := makeAge(user.Bdate)
+				age = &temp
+			}
+
+			if len(user.Relatives) > 0 {
+				for _, relative := range user.Relatives {
+					if relative.Type == "child" {
+						hasChilds = true
+					}
 				}
 			}
 		}
 
+		if *age == 0 {
+			age = nil
+		}
+
+		if *gender == "" {
+			gender = nil
+		}
+
 		for _, val := range item {
 			pin := models.Point{
-				ID:         val.ID,
-				Text:       val.Text,
-				Lat:        val.Lat,
-				Long:       val.Long,
-				SocialType: v.Type(),
-				Gender:     gender,
-				Age:        age,
-				URL:        val.Sizes[len(val.Sizes)-1].URL,
-				UserID:     val.OwnerID,
+				ID:          val.ID,
+				Text:        val.Text,
+				Lat:         val.Lat,
+				Long:        val.Long,
+				SocialType:  v.Type(),
+				Gender:      gender,
+				Age:         age,
+				URL:         val.Sizes[len(val.Sizes)-1].URL,
+				UserID:      val.OwnerID,
+				HasChildren: hasChilds,
 			}
 
 			pins = append(pins, pin)
@@ -227,12 +248,12 @@ func (v *VK) mapToPoint(items map[int][]Item, users map[int]User) []models.Point
 	return pins
 }
 
-func makeAge(date string) (int, error) {
+func makeAge(date string) int {
 	re := regexp.MustCompile(`(?m)^([0-9]{1,2})\.([0-9]{1,2})\.([0-9]{4})$`)
 	strs := re.FindStringSubmatch(date)
 
 	if len(strs) != 4 {
-		return 0, nil
+		return 0
 	}
 
 	days, _ := strconv.Atoi(strs[1])
@@ -246,5 +267,5 @@ func makeAge(date string) (int, error) {
 		age -= 1
 	}
 
-	return age, nil
+	return age
 }
