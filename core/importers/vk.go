@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"encoding/json"
 	"strconv"
+	"event-importer/core"
 )
 
 type VK struct {
@@ -38,7 +39,7 @@ func (v *VK) Init(token string) error {
 	return nil
 }
 
-func (v *VK) Upload(lat float64, long float64, radius int) (interface{}, error) {
+func (v *VK) Upload(lat float64, long float64, radius int) ([]core.Pin, error) {
 	req, err := http.NewRequest("GET", v.url, nil)
 
 	if err != nil {
@@ -72,5 +73,20 @@ func (v *VK) Upload(lat float64, long float64, radius int) (interface{}, error) 
 		return nil, err
 	}
 
-	return p, nil
+	return v.mapToPin(p.Response.Items), nil
+}
+
+func (v *VK) mapToPin(items []Item) []core.Pin {
+	pins := make([]core.Pin, 0)
+
+	for _, item := range items {
+		pin := core.Pin{
+			Lat: item.Lat,
+			Long: item.Long,
+		}
+
+		pins = append(pins, pin)
+	}
+
+	return pins
 }
