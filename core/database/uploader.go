@@ -6,6 +6,10 @@ import (
 )
 
 func (d *Database) SavePoints(location models.Location, points []models.Point) error {
+	if len(points) == 0 {
+		return nil
+	}
+
 	sqlStr := "REPLACE INTO points(social_id, social_type, description, photo, gender, age, has_children, latitude, longitude) VALUES"
 	for k, v := range points {
 		if k == 0 {
