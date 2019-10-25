@@ -19,7 +19,7 @@ type RootResponse struct {
 }
 
 type VKResponse struct {
-	Count uint64 `json:"count"`
+	Count int `json:"count"`
 	Items []Item `json:"items"`
 }
 
@@ -29,6 +29,11 @@ type Item struct {
 	Date int64 `json:"date"`
 	Lat float64 `json:"lat"`
 	Long float64 `json:"long"`
+	Sizes []Size `json:"sizes"`
+}
+
+type Size struct {
+	URL string `json:"url"`
 }
 
 func (v *VK) Init(token string) error {
@@ -38,41 +43,54 @@ func (v *VK) Init(token string) error {
 }
 
 func (v *VK) Upload(lat float64, long float64, radius int) ([]models.Point, error) {
-	req, err := http.NewRequest("GET", v.url, nil)
+	items := make([]Item, 0)
+	offset := 0
 
-	if err != nil {
-		return nil, err
+	for {
+		req, err := http.NewRequest("GET", v.url, nil)
+
+		if err != nil {
+			return nil, err
+		}
+
+		query := req.URL.Query()
+		query.Add("access_token", v.token)
+		query.Add("lat", fmt.Sprintf("%f", lat))
+		query.Add("long", fmt.Sprintf("%f", long))
+		query.Add("radius", strconv.Itoa(radius))
+		query.Add("v", "5.102")
+		query.Add("count", "1000")
+		query.Add("offset", strconv.Itoa(offset))
+		req.URL.RawQuery = query.Encode()
+
+		client := &http.Client{}
+
+		res, err := client.Do(req)
+		if err != nil {
+			return nil, err
+		}
+
+		defer res.Body.Close()
+		body, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			return nil, err
+		}
+
+		var p RootResponse
+		err = json.Unmarshal(body, &p)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(p.Response.Items) == 0 {
+			break
+		}
+
+		offset += 1000
+		items = append(items, p.Response.Items...)
 	}
 
-	query := req.URL.Query()
-	query.Add("access_token", v.token)
-	query.Add("lat", fmt.Sprintf("%f", lat))
-	query.Add("long", fmt.Sprintf("%f", long))
-	query.Add("radius", strconv.Itoa(radius))
-	query.Add("v", "5.102")
-	query.Add("count", "1000")
-	req.URL.RawQuery = query.Encode()
-
-	client := &http.Client{}
-
-	res, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-
-	defer res.Body.Close()
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	var p RootResponse
-	err = json.Unmarshal(body, &p)
-	if err != nil {
-		return nil, err
-	}
-
-	return v.mapToPin(p.Response.Items), nil
+	return v.mapToPin(items), nil
 }
 
 func (v *VK) Type() string {
@@ -91,6 +109,7 @@ func (v *VK) mapToPin(items []Item) []models.Point {
 			SocialType: v.Type(),
 			Gender: "female",
 			Age: 13,
+			URL: item.Sizes[len(item.Sizes) - 1].URL,
 		}
 
 		pins = append(pins, pin)
