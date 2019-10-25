@@ -88,7 +88,7 @@ func (v *VK) Type() string {
 	return "vk"
 }
 
-func (v *VK) getPhotos(lat float64, long float64, radius int, offset int, client *http.Client) (map[int]*Item, error) {
+func (v *VK) getPhotos(lat float64, long float64, radius int, offset int, client *http.Client) (map[int]Item, error) {
 	req, err := http.NewRequest("GET", v.url+"photos.search", nil)
 
 	if err != nil {
@@ -122,15 +122,15 @@ func (v *VK) getPhotos(lat float64, long float64, radius int, offset int, client
 		return nil, err
 	}
 
-	users := make(map[int]*Item)
+	photos := make(map[int]Item)
 	for _, val := range p.Response.Items {
-		users[val.OwnerID] = &val
+		photos[val.OwnerID] = val
 	}
 
-	return users, nil
+	return photos, nil
 }
 
-func (v *VK) getUsers(ids []int, client *http.Client) (map[int]*User, error) {
+func (v *VK) getUsers(ids []int, client *http.Client) (map[int]User, error) {
 	req, err := http.NewRequest("GET", v.url+"users.get", nil)
 
 	if err != nil {
@@ -170,15 +170,15 @@ func (v *VK) getUsers(ids []int, client *http.Client) (map[int]*User, error) {
 		return nil, err
 	}
 
-	users := make(map[int]*User)
+	users := make(map[int]User)
 	for _, val := range p.Response {
-		users[val.ID] = &val
+		users[val.ID] = val
 	}
 
 	return users, nil
 }
 
-func (v *VK) mapToPoint(items map[int]*Item, users map[int]*User) []models.Point {
+func (v *VK) mapToPoint(items map[int]Item, users map[int]User) []models.Point {
 	pins := make([]models.Point, 0)
 
 	for k, item := range items {
