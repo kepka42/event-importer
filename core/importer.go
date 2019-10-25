@@ -4,6 +4,6 @@ import "event-importer/models"
 
 type Importer interface {
 	Init(token string) error
-	Download(lat float64, long float64, radius int) ([]models.Point, error)
+	Download(location *models.Location) ([]models.Point, error)
 	Type() string
 }

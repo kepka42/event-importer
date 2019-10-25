@@ -18,7 +18,7 @@ func (d *Database) SavePoints(location *models.Location, points []models.Point) 
 	ids := make([]int64, 0)
 
 	for _, v := range points {
-		result, err := tx.Exec(`INSERT INTO points(social_id, social_type, description, photo, gender, age, has_children, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE social_id = social_id`, v.ID, v.SocialType, v.Text, v.URL, v.Gender, v.Age, v.HasChildren, v.Lat, v.Long)
+		result, err := tx.Exec(`INSERT INTO points(social_id, social_type, description, photo, gender, age, has_children, latitude, longitude, is_tourist, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE social_id = social_id`, v.ID, v.SocialType, v.Text, v.URL, v.Gender, v.Age, v.HasChildren, v.Lat, v.Long, v.IsTourist, v.CreatedAT, v.UpdatedAT)
 		if err != nil {
 			continue
 		}

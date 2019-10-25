@@ -3,7 +3,6 @@ package core
 import (
 	"event-importer/core/database"
 	"event-importer/models"
-	"fmt"
 )
 
 type Query struct {
@@ -41,7 +40,6 @@ func (m *Manager) Run() error {
 		}
 	} else if m.query.LocationID != 0 {
 		location, err := m.db.GetLocationById(m.query.LocationID)
-		fmt.Println(location)
 		if err != nil {
 			return err
 		}
@@ -57,7 +55,7 @@ func (m *Manager) Run() error {
 	for _, location := range locations {
 		pins := make([]models.Point, 0)
 		for _, imp := range m.importers {
-			res, err := imp.Download(location.Lat, location.Long, location.Radius)
+			res, err := imp.Download(location)
 
 			if err != nil {
 				return err

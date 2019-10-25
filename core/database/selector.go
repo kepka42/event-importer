@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"event-importer/models"
+	"strings"
 )
 
 func (d *Database) GetLocationById(ID int) (*models.Location, error) {
@@ -19,6 +20,16 @@ func (d *Database) GetLocationById(ID int) (*models.Location, error) {
 		return nil, err
 	}
 
+	cities, err := d.getSocialCities([]int{loc.CityID})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(cities) > 0 {
+		loc.CitySocials = cities
+	}
+
 	return loc, nil
 }
 
@@ -28,7 +39,13 @@ func (d *Database) GetLocationsByCityID(cityID int) ([]*models.Location, error) 
 		return nil, err
 	}
 
-	return d.formatLocations(rows)
+	cities, err := d.getSocialCities([]int{cityID})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return d.formatLocations(rows, cities)
 }
 
 func (d *Database) GetLocations() ([]*models.Location, error) {
@@ -37,10 +54,48 @@ func (d *Database) GetLocations() ([]*models.Location, error) {
 		return nil, err
 	}
 
-	return d.formatLocations(rows)
+	cities, err := d.getSocialCities([]int{})
+	if err != nil {
+		return nil, err
+	}
+
+	return d.formatLocations(rows, cities)
 }
 
-func (d *Database) formatLocations(rows *sql.Rows) ([]*models.Location, error) {
+func (d *Database) getSocialCities(ids []int) ([]*models.CitySocial, error) {
+	var rows *sql.Rows
+	var err error
+
+	if len(ids) > 0 {
+		args := make([]interface{}, len(ids))
+		for i, id := range ids {
+			args[i] = id
+		}
+
+		rows, err = d.db.Query("select city_id, social_type, social_id from city_socials where city_id in (?"+strings.Repeat(",?", len(args)-1)+")", args...)
+	} else {
+		rows, err = d.db.Query("select city_id, social_type, social_id from city_socials")
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+	citySocials := make([]*models.CitySocial, 0)
+	for rows.Next() {
+		city := new(models.CitySocial)
+		err := rows.Scan(&city.ID, &city.SocialType, &city.SocialID)
+		if err != nil {
+			return nil, err
+		}
+		citySocials = append(citySocials, city)
+	}
+
+	return citySocials, nil
+}
+
+func (d *Database) formatLocations(rows *sql.Rows, cities []*models.CitySocial) ([]*models.Location, error) {
 	defer rows.Close()
 	locations := make([]*models.Location, 0)
 	for rows.Next() {
@@ -50,6 +105,12 @@ func (d *Database) formatLocations(rows *sql.Rows) ([]*models.Location, error) {
 			return nil, err
 		}
 		locations = append(locations, loc)
+
+		for _, city := range cities {
+			if city.ID == loc.CityID {
+				loc.CitySocials = append(loc.CitySocials, city)
+			}
+		}
 	}
 
 	return locations, nil

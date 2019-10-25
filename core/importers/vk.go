@@ -47,11 +47,17 @@ type User struct {
 	ID        int        `json:"id"`
 	Sex       int        `json:"sex"`
 	Bdate     string     `json:"bdate"`
+	City      City       `json:"city"`
 	Relatives []Relative `json:"relatives"`
 }
 
 type Relative struct {
 	Type string `json:"type"`
+}
+
+type City struct {
+	ID    int    `json:"id"`
+	Title string `json:"title"`
 }
 
 func (v *VK) Init(token string) error {
@@ -60,13 +66,13 @@ func (v *VK) Init(token string) error {
 	return nil
 }
 
-func (v *VK) Download(lat float64, long float64, radius int) ([]models.Point, error) {
+func (v *VK) Download(location *models.Location) ([]models.Point, error) {
 	points := make([]models.Point, 0)
 	offset := 0
 
 	client := &http.Client{}
 	for {
-		photos, err := v.getPhotos(lat, long, radius, offset, client)
+		photos, err := v.getPhotos(location.Lat, location.Long, location.Radius, offset, client)
 
 		if err != nil {
 			return nil, err
@@ -84,7 +90,7 @@ func (v *VK) Download(lat float64, long float64, radius int) ([]models.Point, er
 		users, err := v.getUsers(userIds, client)
 
 		offset += 1000
-		points = append(points, v.mapToPoint(photos, users)...)
+		points = append(points, v.mapToPoint(photos, users, location)...)
 	}
 
 	return points, nil
@@ -189,13 +195,14 @@ func (v *VK) getUsers(ids []int, client *http.Client) (map[int]User, error) {
 	return users, nil
 }
 
-func (v *VK) mapToPoint(items map[int][]Item, users map[int]User) []models.Point {
-	pins := make([]models.Point, 0)
+func (v *VK) mapToPoint(items map[int][]Item, users map[int]User, location *models.Location) []models.Point {
+	points := make([]models.Point, 0)
 
 	for k, item := range items {
 		gender := new(string)
 		age := new(int)
 		hasChilds := false
+		isTourist := new(bool)
 		if user, ok := users[k]; ok {
 			if user.Sex == 1 {
 				t := "female"
@@ -217,6 +224,21 @@ func (v *VK) mapToPoint(items map[int][]Item, users map[int]User) []models.Point
 					}
 				}
 			}
+
+			isTourist = nil
+			if user.City.ID > 0 {
+				for _, l := range location.CitySocials {
+					if l.SocialType == v.Type() {
+						if l.SocialID == user.City.ID {
+							temp := true
+							isTourist = &temp
+						} else {
+							temp := false
+							isTourist = &temp
+						}
+					}
+				}
+			}
 		}
 
 		if *age == 0 {
@@ -228,7 +250,8 @@ func (v *VK) mapToPoint(items map[int][]Item, users map[int]User) []models.Point
 		}
 
 		for _, val := range item {
-			pin := models.Point{
+			tm := time.Unix(val.Date, 0)
+			point := models.Point{
 				ID:          val.ID,
 				Text:        val.Text,
 				Lat:         val.Lat,
@@ -239,13 +262,16 @@ func (v *VK) mapToPoint(items map[int][]Item, users map[int]User) []models.Point
 				URL:         val.Sizes[len(val.Sizes)-1].URL,
 				UserID:      val.OwnerID,
 				HasChildren: hasChilds,
+				IsTourist:   isTourist,
+				CreatedAT:   tm,
+				UpdatedAT:   tm,
 			}
 
-			pins = append(pins, pin)
+			points = append(points, point)
 		}
 	}
 
-	return pins
+	return points
 }
 
 func makeAge(date string) int {
