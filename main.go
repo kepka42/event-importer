@@ -1,19 +1,36 @@
 package main
 
 import (
+	"event-importer/core"
 	"event-importer/core/importers"
 	"fmt"
 )
 
 func main() {
-	vk := &importers.VK{}
-	vk.Init("")
-	pins, err := vk.Upload(55.343837, 86.077922, 30000)
+	imps := initImporters()
+
+	manager := &core.Manager{}
+	err := manager.Init(imps, "")
+
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
 	}
 
-	fmt.Println(pins[0].Long)
+	err = manager.Run()
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
+func initImporters() []core.Importer {
+	imps := make([]core.Importer, 0)
+
+	vk := &importers.VK{}
+	vk.Init("")
+
+	imps = append(imps, vk)
+
+	return imps
 }
 
 
