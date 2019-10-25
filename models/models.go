@@ -10,6 +10,7 @@ type Point struct {
 	Long        float64
 	Text        string
 	SocialType  string
+	UserID      int
 }
 
 type Location struct {

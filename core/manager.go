@@ -57,7 +57,7 @@ func (m *Manager) Run() error {
 	for _, location := range locations {
 		pins := make([]models.Point, 0)
 		for _, imp := range m.importers {
-			res, err := imp.Upload(location.Lat, location.Long, location.Radius)
+			res, err := imp.Download(location.Lat, location.Long, location.Radius)
 
 			if err != nil {
 				return err
