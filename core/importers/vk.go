@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 type VK struct {
@@ -181,13 +182,27 @@ func (v *VK) mapToPoint(items map[int]*Item, users map[int]*User) []models.Point
 	pins := make([]models.Point, 0)
 
 	for k, item := range items {
-		var gender string
-
+		gender := new(string)
+		age := new(int)
 		if user, ok := users[k]; ok {
 			if user.Sex == 1 {
-				gender = "female"
+				t := "female"
+				gender = &t
 			} else if user.Sex == 2 {
-				gender = "male"
+				t := "male"
+				gender = &t
+			}
+
+			if user.Bdate != "" {
+				t, err := dateToUnix(user.Bdate)
+				if err == nil {
+					current := time.Now().Unix()
+					diff := current - t
+					tm := time.Unix(diff, 0)
+
+					temp := tm.Year()
+					age = &temp
+				}
 			}
 		}
 
@@ -198,7 +213,7 @@ func (v *VK) mapToPoint(items map[int]*Item, users map[int]*User) []models.Point
 			Long:       item.Long,
 			SocialType: v.Type(),
 			Gender:     gender,
-			Age:        14,
+			Age:        age,
 			URL:        item.Sizes[len(item.Sizes)-1].URL,
 			UserID:     item.OwnerID,
 		}
@@ -207,4 +222,15 @@ func (v *VK) mapToPoint(items map[int]*Item, users map[int]*User) []models.Point
 	}
 
 	return pins
+}
+
+func dateToUnix(date string) (int64, error) {
+	layout := "21.9.1986"
+	t, err := time.Parse(layout, date)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return t.Unix(), nil
 }

@@ -3,8 +3,8 @@ package models
 type Point struct {
 	ID          int
 	URL         string
-	Gender      string
-	Age         int
+	Gender      *string
+	Age         *int
 	HasChildren bool
 	Lat         float64
 	Long        float64
