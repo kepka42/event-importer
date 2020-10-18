@@ -12,5 +12,5 @@ func MakePointDB(lat float64, long float64) PointDB {
 func (p PointDB) ToMySQLString() string {
 	strLat := strconv.FormatFloat(p.Lat, 'f', 6, 64)
 	strLong := strconv.FormatFloat(p.Long, 'f', 6, 64)
-	return "Point(" + strLat + " " + strLong + ")"
+	return "Point(" + strLat + ", " + strLong + ")"
 }

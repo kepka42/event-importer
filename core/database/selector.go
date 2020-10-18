@@ -25,7 +25,7 @@ func (d *Database) GetLocationById(ID int) (*models.Location, error) {
 }
 
 func (d *Database) GetLocations() ([]*models.Location, error) {
-	rows, err := d.db.Query("select id, ST_X(coordinates) latitude, ST_X(coordinates) longitude, radius, start_from from locations")
+	rows, err := d.db.Query("select id, ST_X(coordinates) latitude, ST_Y(coordinates) longitude, radius, start_from from locations")
 	if err != nil {
 		return nil, err
 	}

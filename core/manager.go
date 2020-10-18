@@ -66,7 +66,7 @@ func (m *Manager) Run() error {
 		}
 
 		count_pins := len(pins)
-		logger.Log("downloaded " + strconv.Itoa(count_pins) + "points")
+		logger.Log("downloaded " + strconv.Itoa(count_pins) + " points")
 
 		err := m.db.SavePoints(location, pins)
 		if err != nil {

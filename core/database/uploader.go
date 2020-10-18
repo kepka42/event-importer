@@ -27,11 +27,13 @@ func (d *Database) SavePoints(location *models.Location, points []models.Point) 
 			location.ID, v.URL, v.Gender, v.Age, v.HasChildren, pointStr, v.IsTourist, v.VkUserID, v.UserCity,
 			)
 		if err != nil {
+			logger.LogError("can not pass point: " + err.Error())
 			continue
 		}
 
 		id, err := result.LastInsertId()
 		if err != nil {
+			logger.LogError("can not get last insert id: " + err.Error())
 			continue
 		}
 		ids = append(ids, id)
