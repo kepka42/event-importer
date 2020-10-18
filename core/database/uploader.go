@@ -21,10 +21,9 @@ func (d *Database) SavePoints(location *models.Location, points []models.Point) 
 	ids := make([]int64, 0)
 
 	for _, v := range points {
-		pointStr := v.Coordinates.ToMySQLString()
 		result, err := tx.Exec(
-			`INSERT INTO points(location_id, photo, gender, age, has_children, coordinates, is_tourist, vk_user_id, user_city) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE location_id = location_id`,
-			location.ID, v.URL, v.Gender, v.Age, v.HasChildren, pointStr, v.IsTourist, v.VkUserID, v.UserCity,
+			`INSERT INTO points(location_id, photo, gender, age, has_children, lat, lng, is_tourist, vk_user_id, user_city) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE location_id = location_id`,
+			location.ID, v.URL, v.Gender, v.Age, v.HasChildren, v.Coordinates.Lat, v.Coordinates.Lng, v.IsTourist, v.VkUserID, v.UserCity,
 			)
 		if err != nil {
 			logger.LogError("can not pass point: " + err.Error())
@@ -39,6 +38,11 @@ func (d *Database) SavePoints(location *models.Location, points []models.Point) 
 		ids = append(ids, id)
 
 		logger.Log("saved point: " + strconv.Itoa(v.ID))
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return err
 	}
 
 	return nil

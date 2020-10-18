@@ -80,7 +80,7 @@ func (v *VK) Download(location *models.Location) ([]models.Point, error) {
 
 	client := &http.Client{}
 	for {
-		photos, err := v.getPhotos(location.Coordinates.Lat, location.Coordinates.Long, location.Radius, offset, startFrom, client)
+		photos, err := v.getPhotos(location.Coordinates.Lat, location.Coordinates.Lng, location.Radius, offset, startFrom, client)
 
 		if err != nil {
 			return nil, err

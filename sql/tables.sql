@@ -1,8 +1,9 @@
 CREATE TABLE locations (
     id          INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     radius      INT NOT NULL,
-    coordinates POINT NOT NULL,
-    start_from  TIMESTAMP,
+    lat         DOUBLE(10, 7) NOT NULL,
+    lng         DOUBLE(10, 7) NOT NULL,
+    start_from  TIMESTAMP NULL DEFAULT NULL,
     title       VARCHAR(255) NOT NULL
 );
 
@@ -10,10 +11,11 @@ CREATE TABLE points (
     id           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     location_id  INT UNSIGNED NOT NULL,
     photo        VARCHAR(255),
-    gender       char(6),
+    gender       CHAR(6),
     age          TINYINT UNSIGNED,
     has_children TINYINT(1) NOT NULL,
-    coordinates  POINT NOT NULL,
+    lat          DOUBLE(10, 7) NOT NULL,
+    lng          DOUBLE(10, 7) NOT NULL,
     is_tourist   TINYINT(1),
     vk_user_id   INT,
     user_city    VARCHAR(255),

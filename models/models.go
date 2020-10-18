@@ -25,7 +25,7 @@ type Location struct {
 }
 
 type PointDB struct {
-	Lat  float64
-	Long float64
+	Lat float64
+	Lng float64
 }
 

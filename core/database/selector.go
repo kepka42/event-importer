@@ -7,7 +7,7 @@ import (
 )
 
 func (d *Database) GetLocationById(ID int) (*models.Location, error) {
-	rows, err := d.db.Query("select id, ST_X(coordinates) latitude, ST_X(coordinates) longitude, radius, start_from from locations where id = ?", ID)
+	rows, err := d.db.Query("select id, lat latitude, lng longitude, radius, start_from from locations where id = ?", ID)
 	if err != nil {
 		return nil, err
 	}
@@ -25,7 +25,7 @@ func (d *Database) GetLocationById(ID int) (*models.Location, error) {
 }
 
 func (d *Database) GetLocations() ([]*models.Location, error) {
-	rows, err := d.db.Query("select id, ST_X(coordinates) latitude, ST_Y(coordinates) longitude, radius, start_from from locations")
+	rows, err := d.db.Query("select id, lat latitude, lng longitude, radius, start_from from locations")
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +41,7 @@ func (d *Database) formatLocations(rows *sql.Rows) ([]*models.Location, error) {
 
 		var t *time.Time
 		coordinates := models.PointDB{}
-		err := rows.Scan(&loc.ID, &coordinates.Lat, &coordinates.Long, &loc.Radius, &t)
+		err := rows.Scan(&loc.ID, &coordinates.Lat, &coordinates.Lng, &loc.Radius, &t)
 
 		loc.Coordinates = coordinates
 		if err != nil {
