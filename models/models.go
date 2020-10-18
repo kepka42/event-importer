@@ -2,7 +2,6 @@ package models
 
 import (
 	"database/sql"
-	"time"
 )
 
 type Point struct {
@@ -12,27 +11,20 @@ type Point struct {
 	Age         *int
 	HasChildren bool
 	IsTourist   *bool
-	Lat         float64
-	Long        float64
+	Coordinates PointDB
 	Text        string
-	SocialType  string
 	UserID      int
-	CreatedAT   time.Time
-	UpdatedAT   time.Time
 }
 
 type Location struct {
 	ID          int
-	CityID      int
-	Lat         float64
-	Long        float64
+	Coordinates PointDB
 	Radius      int
-	CitySocials []*CitySocial
 	StartFrom   sql.NullInt64
 }
 
-type CitySocial struct {
-	ID         int
-	SocialID   int
-	SocialType string
+type PointDB struct {
+	Lat  float64
+	Long float64
 }
+

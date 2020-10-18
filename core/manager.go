@@ -8,7 +8,6 @@ import (
 
 type Query struct {
 	LocationID int
-	CityID     int
 }
 
 type Manager struct {
@@ -33,12 +32,7 @@ func (m *Manager) Init(importers []Importer, dbConn string, query Query) error {
 func (m *Manager) Run() error {
 	var err error
 	locations := make([]*models.Location, 0)
-	if m.query.CityID != 0 {
-		locations, err = m.db.GetLocationsByCityID(m.query.CityID)
-		if err != nil {
-			return err
-		}
-	} else if m.query.LocationID != 0 {
+	if m.query.LocationID != 0 {
 		location, err := m.db.GetLocationById(m.query.LocationID)
 		if err != nil {
 			return err

@@ -11,7 +11,6 @@ type Params struct {
 	VKtoken      string
 	DBconnection string
 	LocationID   int
-	CityID       int
 }
 
 func main() {
@@ -21,7 +20,6 @@ func main() {
 	manager := &core.Manager{}
 	err := manager.Init(imps, params.DBconnection, core.Query{
 		LocationID: params.LocationID,
-		CityID:     params.CityID,
 	})
 
 	if err != nil {
@@ -52,7 +50,6 @@ func parseParams() Params {
 	vk := flag.String("vk", "", "token for vk")
 	db := flag.String("db", "", "connection for db")
 	loc := flag.Int("location", 0, "location id")
-	city := flag.Int("city", 0, "city id")
 
 	flag.Parse()
 
@@ -60,7 +57,6 @@ func parseParams() Params {
 	params.VKtoken = *vk
 	params.DBconnection = *db
 	params.LocationID = *loc
-	params.CityID = *city
 
 	return params
 }

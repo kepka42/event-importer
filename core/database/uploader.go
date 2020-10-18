@@ -20,7 +20,11 @@ func (d *Database) SavePoints(location *models.Location, points []models.Point) 
 	ids := make([]int64, 0)
 
 	for _, v := range points {
-		result, err := tx.Exec(`INSERT INTO points(social_id, social_type, description, photo, gender, age, has_children, latitude, longitude, is_tourist, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE social_id = social_id`, v.ID, v.SocialType, v.Text, v.URL, v.Gender, v.Age, v.HasChildren, v.Lat, v.Long, v.IsTourist, v.CreatedAT, v.UpdatedAT)
+		pointStr := v.Coordinates.ToMySQLString()
+		result, err := tx.Exec(
+			`INSERT INTO points(location_id, photo, gender, age, has_children, coordinates, is_tourist) VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE location_id = location_id`,
+			location.ID, v.URL, v.Gender, v.Age, v.HasChildren, pointStr, v.IsTourist,
+			)
 		if err != nil {
 			continue
 		}
@@ -31,17 +35,9 @@ func (d *Database) SavePoints(location *models.Location, points []models.Point) 
 		}
 		ids = append(ids, id)
 
-		fmt.Println("Added point:", v.ID, v.SocialType)
+		fmt.Println("Added point:", v.ID)
 	}
 
-	for _, v := range ids {
-		tx.Exec(`INSERT INTO location_point(location_id, point_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE location_id = location_id`, location.ID, v)
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		return err
-	}
 	return nil
 }
 
