@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"event-importer/core"
 	"event-importer/core/importers"
 	"flag"
@@ -15,6 +16,13 @@ type Params struct {
 
 func main() {
 	params := parseParams()
+
+	check_error := checkParams(params)
+	if check_error != nil {
+		fmt.Println(check_error.Error())
+		return
+	}
+
 	imps := initImporters(&params)
 
 	manager := &core.Manager{}
@@ -59,4 +67,16 @@ func parseParams() Params {
 	params.LocationID = *loc
 
 	return params
+}
+
+func checkParams(params Params) error {
+	if len(params.DBconnection) == 0 {
+		return errors.New("DB connection can not be empty")
+	}
+
+	if len(params.VKtoken) == 0 {
+		return errors.New("VK token can not by empty")
+	}
+
+	return nil
 }
