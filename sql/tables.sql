@@ -15,5 +15,7 @@ CREATE TABLE points (
     has_children TINYINT(1) NOT NULL,
     coordinates  POINT NOT NULL,
     is_tourist   TINYINT(1),
+    vk_user_id   INT,
+    user_city    VARCHAR(255)
     FOREIGN KEY (location_id) REFERENCES locations(id)
 );

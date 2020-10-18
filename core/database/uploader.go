@@ -22,8 +22,8 @@ func (d *Database) SavePoints(location *models.Location, points []models.Point) 
 	for _, v := range points {
 		pointStr := v.Coordinates.ToMySQLString()
 		result, err := tx.Exec(
-			`INSERT INTO points(location_id, photo, gender, age, has_children, coordinates, is_tourist) VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE location_id = location_id`,
-			location.ID, v.URL, v.Gender, v.Age, v.HasChildren, pointStr, v.IsTourist,
+			`INSERT INTO points(location_id, photo, gender, age, has_children, coordinates, is_tourist, vk_user_id, user_city) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE location_id = location_id`,
+			location.ID, v.URL, v.Gender, v.Age, v.HasChildren, pointStr, v.IsTourist, v.VkUserID, v.UserCity,
 			)
 		if err != nil {
 			continue

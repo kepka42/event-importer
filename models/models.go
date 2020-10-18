@@ -13,7 +13,8 @@ type Point struct {
 	IsTourist   *bool
 	Coordinates PointDB
 	Text        string
-	UserID      int
+	VkUserID    int
+	UserCity  *string
 }
 
 type Location struct {

@@ -80,7 +80,7 @@ func (v *VK) Download(location *models.Location) ([]models.Point, error) {
 
 	client := &http.Client{}
 	for {
-		photos, err := v.getPhotos(location.Lat, location.Long, location.Radius, offset, startFrom, client)
+		photos, err := v.getPhotos(location.Coordinates.Lat, location.Coordinates.Long, location.Radius, offset, startFrom, client)
 
 		if err != nil {
 			return nil, err
@@ -98,7 +98,7 @@ func (v *VK) Download(location *models.Location) ([]models.Point, error) {
 		users, err := v.getUsers(userIds, client)
 
 		offset += 1000
-		points = append(points, v.mapToPoint(photos, users, location)...)
+		points = append(points, v.mapToPoint(photos, users)...)
 	}
 
 	return points, nil
@@ -206,7 +206,7 @@ func (v *VK) getUsers(ids []int, client *http.Client) (map[int]User, error) {
 	return users, nil
 }
 
-func (v *VK) mapToPoint(items map[int][]Item, users map[int]User, location *models.Location) []models.Point {
+func (v *VK) mapToPoint(items map[int][]Item, users map[int]User) []models.Point {
 	points := make([]models.Point, 0)
 
 	for k, item := range items {
@@ -214,6 +214,7 @@ func (v *VK) mapToPoint(items map[int][]Item, users map[int]User, location *mode
 		age := new(int)
 		hasChilds := false
 		isTourist := new(bool)
+		city := new(string)
 		if user, ok := users[k]; ok {
 			if user.Sex == 1 {
 				t := "female"
@@ -236,20 +237,11 @@ func (v *VK) mapToPoint(items map[int][]Item, users map[int]User, location *mode
 				}
 			}
 
-			isTourist = nil
 			if user.City.ID > 0 {
-				for _, l := range location.CitySocials {
-					if l.SocialType == v.Type() {
-						if l.SocialID == user.City.ID {
-							temp := true
-							isTourist = &temp
-						} else {
-							temp := false
-							isTourist = &temp
-						}
-					}
-				}
+				*city = user.City.Title
 			}
+
+			isTourist = nil
 		}
 
 		if *age == 0 {
@@ -261,21 +253,17 @@ func (v *VK) mapToPoint(items map[int][]Item, users map[int]User, location *mode
 		}
 
 		for _, val := range item {
-			tm := time.Unix(val.Date, 0)
 			point := models.Point{
 				ID:          val.ID,
 				Text:        val.Text,
-				Lat:         val.Lat,
-				Long:        val.Long,
-				SocialType:  v.Type(),
+				Coordinates: models.MakePointDB(val.Lat, val.Long),
 				Gender:      gender,
 				Age:         age,
 				URL:         val.Sizes[len(val.Sizes)-1].URL,
-				UserID:      val.OwnerID,
+				VkUserID:    val.OwnerID,
 				HasChildren: hasChilds,
 				IsTourist:   isTourist,
-				CreatedAT:   tm,
-				UpdatedAT:   tm,
+				UserCity:	 city,
 			}
 
 			points = append(points, point)
