@@ -4,8 +4,9 @@ import (
 	"errors"
 	"event-importer/core"
 	"event-importer/core/importers"
+	"event-importer/logger"
 	"flag"
-	"fmt"
+	"strconv"
 )
 
 type Params struct {
@@ -15,28 +16,39 @@ type Params struct {
 }
 
 func main() {
+	logger.Log("started")
 	params := parseParams()
 
 	check_error := checkParams(params)
 	if check_error != nil {
-		fmt.Println(check_error.Error())
+		logger.LogError(check_error.Error())
 		return
 	}
 
 	imps := initImporters(&params)
+	count_imps := len(imps)
+	if count_imps == 0 {
+		logger.LogError("empty importers");
+		return
+	}
+
+	logger.Log("inited " + strconv.Itoa(count_imps) + " importers")
 
 	manager := &core.Manager{}
 	err := manager.Init(imps, params.DBconnection, core.Query{
 		LocationID: params.LocationID,
 	})
 
+	logger.Log("inited manager")
+
 	if err != nil {
-		fmt.Println(err)
+		logger.LogError(err.Error())
 	}
 
+	logger.Log("starting...")
 	err = manager.Run()
 	if err != nil {
-		fmt.Println(err)
+		logger.LogError(err.Error())
 	}
 }
 

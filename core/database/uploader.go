@@ -1,8 +1,9 @@
 package database
 
 import (
+	"event-importer/logger"
 	"event-importer/models"
-	"fmt"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -35,7 +36,7 @@ func (d *Database) SavePoints(location *models.Location, points []models.Point) 
 		}
 		ids = append(ids, id)
 
-		fmt.Println("Added point:", v.ID)
+		logger.Log("saved point: " + strconv.Itoa(v.ID))
 	}
 
 	return nil

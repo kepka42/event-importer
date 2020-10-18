@@ -2,7 +2,9 @@ package core
 
 import (
 	"event-importer/core/database"
+	"event-importer/logger"
 	"event-importer/models"
+	"strconv"
 	"time"
 )
 
@@ -46,12 +48,16 @@ func (m *Manager) Run() error {
 		}
 	}
 
+	if len(locations) == 0 {
+		logger.LogError("empty locations")
+		return nil
+	}
+
 	ids := make([]int, 0)
 	for _, location := range locations {
 		pins := make([]models.Point, 0)
 		for _, imp := range m.importers {
 			res, err := imp.Download(location)
-
 			if err != nil {
 				return err
 			}
@@ -59,10 +65,15 @@ func (m *Manager) Run() error {
 			pins = append(pins, res...)
 		}
 
+		count_pins := len(pins)
+		logger.Log("downloaded " + strconv.Itoa(count_pins) + "points")
+
 		err := m.db.SavePoints(location, pins)
 		if err != nil {
 			return err
 		}
+
+		logger.Log("saved points")
 
 		ids = append(ids, location.ID)
 	}
