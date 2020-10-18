@@ -93,3 +93,8 @@ help: Makefile
 	@echo
 	@sed -n 's/^##//p' $< | column -t -s ':' |  sed -e 's/^/ /'
 	@echo
+
+## create tables
+
+create-tables:
+	@bash -c "mysql -u $(DB_USER) -p $(DB) < ./sql/tables.sql"
