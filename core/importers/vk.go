@@ -128,6 +128,9 @@ func (v *VK) getPhotos(lat float64, long float64, radius int, offset int, startF
 	query.Add("v", "5.102")
 	query.Add("count", "1000")
 	query.Add("offset", strconv.Itoa(offset))
+	query.Add("sort", "0") // Сортировка по дате добавления фотографии
+	query.Add("end_time", strconv.FormatInt(time.Now().Unix(), 10))
+
 	if startFrom != nil {
 		query.Add("start_time", strconv.FormatInt(startFrom.Unix(), 10))
 	}
