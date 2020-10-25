@@ -2,6 +2,7 @@ package importers
 
 import (
 	"encoding/json"
+	"event-importer/logger"
 	"event-importer/models"
 	"fmt"
 	"io/ioutil"
@@ -60,6 +61,8 @@ type City struct {
 	Title string `json:"title"`
 }
 
+const SELF_CITY = 2 // Saint Petersburg
+
 func (v *VK) Init(token string) error {
 	v.url = "https://api.vk.com/method/"
 	v.token = token
@@ -74,8 +77,10 @@ func (v *VK) Download(location *models.Location) ([]models.Point, error) {
 	if location.StartFrom.Valid {
 		start := time.Unix(location.StartFrom.Int64, 0)
 		startFrom = &start
+		logger.Log("start from " + startFrom.Format(time.RFC3339) + " for location " + strconv.Itoa(location.ID))
 	} else {
 		startFrom = nil
+		logger.Log("start from nil" + " for location " + strconv.Itoa(location.ID))
 	}
 
 	client := &http.Client{}
@@ -213,8 +218,9 @@ func (v *VK) mapToPoint(items map[int][]Item, users map[int]User) []models.Point
 		gender := new(string)
 		age := new(int)
 		hasChilds := false
-		isTourist := new(bool)
 		city := new(string)
+		city_id := 0
+		var isTourist *bool
 		if user, ok := users[k]; ok {
 			if user.Sex == 1 {
 				t := "female"
@@ -239,9 +245,16 @@ func (v *VK) mapToPoint(items map[int][]Item, users map[int]User) []models.Point
 
 			if user.City.ID > 0 {
 				*city = user.City.Title
-			}
+				city_id = user.City.ID
 
-			isTourist = nil
+				isTourist = new(bool)
+
+				if city_id == SELF_CITY {
+					*isTourist = false
+				} else if city_id != 0 {
+					*isTourist = true
+				}
+			}
 		}
 
 		if *age == 0 {
@@ -264,6 +277,8 @@ func (v *VK) mapToPoint(items map[int][]Item, users map[int]User) []models.Point
 				HasChildren: hasChilds,
 				IsTourist:   isTourist,
 				UserCity:	 city,
+				UserCityId:  city_id,
+				Date: 		 val.Date,
 			}
 
 			points = append(points, point)

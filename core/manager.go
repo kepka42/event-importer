@@ -53,7 +53,6 @@ func (m *Manager) Run() error {
 		return nil
 	}
 
-	ids := make([]int, 0)
 	for _, location := range locations {
 		pins := make([]models.Point, 0)
 		for _, imp := range m.importers {
@@ -73,16 +72,37 @@ func (m *Manager) Run() error {
 			return err
 		}
 
-		logger.Log("saved points")
+		logger.Log("saved points " + strconv.Itoa(len(pins)))
 
+		max_date := time.Now()
+		if len(pins) != 0 {
+			max_date = maxDate(pins)
+		}
+
+		logger.Log("max date is " + max_date.Format(time.RFC3339) + " for location " + strconv.Itoa(location.ID))
+
+		ids := make([]int, 0)
 		ids = append(ids, location.ID)
-	}
+		err = m.db.UpdateStartFrom(ids, &max_date)
+		if err != nil {
+			return err
+		}
 
-	now := time.Now()
-	err = m.db.UpdateStartFrom(ids, &now)
-	if err != nil {
-		return err
+		logger.Log("updated location")
 	}
 
 	return nil
+}
+
+func maxDate(pins []models.Point) time.Time {
+	max := int64(0)
+
+	for _, p := range pins {
+		current := p.Date
+		if current > max {
+			max = current
+		}
+	}
+
+	return time.Unix(max, 0)
 }

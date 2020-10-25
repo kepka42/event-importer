@@ -19,5 +19,7 @@ CREATE TABLE points (
     is_tourist   TINYINT(1),
     vk_user_id   INT,
     user_city    VARCHAR(255),
+    user_city_id INT,
+    created_at   TIMESTAMP,
     FOREIGN KEY (location_id) REFERENCES locations(id)
 );

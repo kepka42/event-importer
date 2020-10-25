@@ -14,7 +14,9 @@ type Point struct {
 	Coordinates PointDB
 	Text        string
 	VkUserID    int
-	UserCity  *string
+	UserCity  	*string
+	UserCityId  int
+	Date 		int64
 }
 
 type Location struct {
