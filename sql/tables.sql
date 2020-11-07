@@ -4,7 +4,8 @@ CREATE TABLE locations (
     lat         DOUBLE(10, 7) NOT NULL,
     lng         DOUBLE(10, 7) NOT NULL,
     start_from  TIMESTAMP NULL DEFAULT NULL,
-    title       VARCHAR(255) NOT NULL
+    title       VARCHAR(255) NOT NULL,
+    `type`      VARCHAR(100) NOT NULL
 );
 
 CREATE TABLE points (
